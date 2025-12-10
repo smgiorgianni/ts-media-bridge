@@ -5,10 +5,10 @@ description = "Bridge Spotify and NYT APIs to analyze streaming popularity vs me
 authors = ["Sofia Giorgianni <sg3925@columbia.edu>"]
 readme = "README.md"
 license = "MIT"
-packages = [{ include = "ts_media_bridge" }]
+packages = [{include = "ts_media_bridge"}]
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.12"
 requests = "^2.31.0"
 pandas = "^2.0.0"
 python-dotenv = "^1.0.0"
@@ -29,6 +29,6 @@ docs = [
 ]
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
