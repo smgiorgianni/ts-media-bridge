@@ -1,83 +1,64 @@
 # ts-media-bridge
 
-A Python package that bridges Spotify and New York Times APIs to analyze the relationship between music streaming popularity and media coverage for Taylor Swift's discography.
-
-**Final Project for Columbia University Modern Data Structures (Fall 2025)**
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Usage Examples](#usage-examples)
-- [Data](#data)
-- [Key Findings](#key-findings)
-- [Rate Limiting](#rate-limiting)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
-- [Author](#author)
-
+Bridge Spotify and NYT APIs to analyze the relationship between streaming popularity and media coverage.
 
 ## Overview
 
-`ts-media-bridge` connects artist metadata from Spotify with article coverage from the New York Times to explore how media attention correlates with streaming performance. This package provides tools to:
+**ts-media-bridge** is a Python package that connects two data sources—Spotify's music streaming data and The New York Times' article archive—to explore how an artist's commercial success relates to their cultural impact.
 
-- Fetch artist and album data from Spotify API
-- Search and retrieve articles from NYT Article Search API
-- Match articles to specific albums using intelligent text analysis
-- Analyze patterns in media coverage vs. streaming popularity
-- Handle API rate limiting and pagination automatically
+This package provides:
+- **SpotifyClient**: Easy-to-use wrapper for Spotify's Web API with authentication handling
+- **NYTClient**: Interface to The New York Times Article Search API
+- **Intelligent text matching**: Automatically connects articles to albums using context-aware algorithms
+- **Analysis tools**: Helper functions for exploring trends and patterns in the data
 
-## Features
+### Key Features
 
-- **Spotify Integration**: Get comprehensive artist discography with metadata (popularity, release dates, track counts, etc.)
-- **NYT Article Search**: Search for articles by artist, album, or custom queries with date filtering
-- **Smart Matching**: Automatically match articles to albums using context-aware text analysis
-- **Rate Limiting**: Built-in rate limiting to respect API quotas
-- **Data Export**: Export results to CSV for further analysis
-- **Helper Functions**: Utilities for analyzing tracks by year, comparing re-recordings, and more
+-  **Spotify API Integration**: Fetch artist data, albums, and tracks with automatic OAuth handling
+-  **NYT API Integration**: Search and retrieve articles with flexible filtering
+-  **Smart Matching**: Connect articles to albums using intelligent text analysis
+-  **Analysis Helpers**: Built-in functions for temporal analysis and comparisons
+-  **Data Export**: Clean pandas DataFrames ready for visualization and further analysis
 
-## Installation 
+## Installation
+
 ### Prerequisites
 
-- Python 3.13+
-- API keys (see below)
+- Python 3.12 or higher
+- API credentials:
+  - [Spotify Developer Account](https://developer.spotify.com/)
+  - [New York Times Developer Account](https://developer.nytimes.com/)
 
-### Install from source
+### Install from GitHub
+```bash
+pip install git+https://github.com/smgiorgianni/ts-media-bridge.git
+```
+
+### Development Installation
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ts-media-bridge.git
+git clone https://github.com/smgiorgianni/ts-media-bridge.git
 cd ts-media-bridge
 
-# Option 1: Install with Poetry
+# Install with Poetry
 poetry install
 
-# Option 2: Install with pip in development mode
+# Or with pip
 pip install -e .
 ```
 
-### Install from PyPI (coming soon)
-```bash
-pip install ts-media-bridge
-```
+## Quick Start
 
-### API Keys Required
-You need API keys for both Spotify and NYT:
+### 1. Set Up API Credentials
 
-1. **Spotify API**: Get credentials from [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-2. **NYT API**: Get your key from [NYT Developer Portal](https://developer.nytimes.com/)
-
-Create a `.env` file in the project root:
+Create a `.env` file in your project directory:
 ```bash
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 NYT_API_KEY=your_nyt_api_key
 ```
 
-## Quick Start
-
+### 2. Basic Usage
 ```python
 from ts_media_bridge import SpotifyClient, NYTClient, match_articles_to_albums
 
@@ -86,131 +67,328 @@ sp = SpotifyClient()
 nyt = NYTClient()
 
 # Get Taylor Swift's albums from Spotify
-taylor_swift_id = "06HL4z0CvFAxyc27GXpf02"
-df_albums = sp.get_artist_albums_df(taylor_swift_id)
+artist_id = "06HL4z0CvFAxyc27GXpf02"  # Taylor Swift
+df_albums = sp.get_artist_albums_df(artist_id)
 
-# Search NYT for articles about Taylor Swift
+# Search for Taylor Swift articles in NYT
 articles = nyt.search_taylor_swift(pages=5)
 df_articles = nyt.docs_to_df(articles)
 
-# Match articles to specific albums
+# Match articles to albums
 df_matched = match_articles_to_albums(df_albums, df_articles)
 
-# Analyze coverage
-mentions = df_matched.groupby("album_base_title")["web_url"].nunique()
-print(mentions)
+# Analyze results
+print(f"Found {len(df_matched)} article-album matches")
+coverage = df_matched.groupby('album_base_title')['web_url'].nunique()
+print(coverage.sort_values(ascending=False))
 ```
 
-## Usage Examples
-
-### Get Artist Albums
+### 3. Analysis Example
 ```python
-from ts_media_bridge import SpotifyClient
+from ts_media_bridge import SpotifyClient, popularity_over_time
 
 sp = SpotifyClient()
-df_albums = sp.get_artist_albums_df("06HL4z0CvFAxyc27GXpf02")
-print(df_albums[['name', 'release_date', 'popularity']])
+
+# Get all tracks for an artist
+tracks_df = sp.get_artist_tracks_df("06HL4z0CvFAxyc27GXpf02")
+
+# Analyze popularity trends over time
+yearly_popularity = popularity_over_time(tracks_df)
+print(yearly_popularity)
 ```
 
-### Search NYT Articles by Date Range
-```python
-from ts_media_bridge import NYTClient
+## Documentation
 
-nyt = NYTClient()
-docs = nyt.search_articles(
-    query="Taylor Swift",
-    pages=3,
-    begin_date="20200101",
-    end_date="20221231"
-)
-df_articles = nyt.docs_to_df(docs)
-```
+Full documentation is available at: **https://ts-media-bridge.readthedocs.io**
 
-### Compare Original Albums vs Taylor's Versions
-```python
-from ts_media_bridge import compare_rerecordings
+### Key Documentation Pages:
 
-# Assuming you have track-level data
-df_tracks = sp.get_artist_tracks_df("06HL4z0CvFAxyc27GXpf02")
-comparison = compare_rerecordings(df_tracks)
-print(comparison)
-```
-
-## Data
-
-This package includes sample datasets in CSV format:
-
-- **`ts_albums.csv`**: Canonical list of Taylor Swift albums with Spotify metadata
-- **`taylor_swift_combined_analysis.csv`**: Combined Spotify + NYT coverage data
-- **`album_article_matches.csv`**: Individual article-album matches (60 pairs)
-- **`nyt_articles.csv`**: Raw NYT articles collected (126 articles)
+- [Installation Guide](https://ts-media-bridge.readthedocs.io/en/latest/installation.html)
+- [Quick Start Tutorial](https://ts-media-bridge.readthedocs.io/en/latest/quickstart.html)
+- [API Reference](https://ts-media-bridge.readthedocs.io/en/latest/api.html)
+- [Usage Examples](https://ts-media-bridge.readthedocs.io/en/latest/examples.html)
 
 ## Project Structure
 
-```
 ts-media-bridge/
-├── ts_media_bridge/
+├── ts_media_bridge/           # Main package
 │   ├── __init__.py
 │   ├── spotify_client.py      # Spotify API client
 │   ├── nyt_client.py           # NYT API client
 │   ├── media_bridge.py         # Article-album matching logic
-│   ├── spotify_helpers.py      # Analysis helper functions
-│   └── utils.py                # Utility functions
-├── notebooks/
-│   ├── nyt_api_dev.ipynb       # Development notebook
-│   └── vignette.ipynb          # Usage examples and analysis
-├── tests/
+│   └── spotify_helpers.py      # Analysis helper functions
+├── notebooks/                  # Jupyter notebooks
+│   ├── api_development.ipynb   # API development and testing
+│   ├── vignette.ipynb          # Usage examples and analysis
+│   ├── *.csv                   # Generated datasets
+│   └── *.png                   # Visualizations
+├── tests/                      # Test suite
+│   ├── test_basic.py           # Smoke tests
 │   └── test_clients.py         # Unit tests
-├── pyproject.toml
-├── README.md
-└── LICENSE
-```
+├── docs/                       # Sphinx documentation
+│   ├── source/                 # Documentation source files
+│   │   ├── conf.py
+│   │   ├── index.rst
+│   │   ├── installation.rst
+│   │   ├── quickstart.rst
+│   │   ├── api.rst
+│   │   └── examples.rst
+│   ├── build/html/             # Generated HTML documentation
+│   └── Makefile
+├── .gitignore                  # Git ignore rules
+├── .readthedocs.yaml           # ReadTheDocs configuration
+├── LICENSE                     # MIT License
+├── README.md                   # This file
+├── pyproject.toml              # Package configuration
+├── requirements.txt            # Python dependencies
+└── poetry.lock                 # Locked dependencies
 
 ## Key Findings
 
-Analysis of 126 NYT articles matched to Taylor Swift's discography revealed:
+Analysis of Taylor Swift's discography revealed interesting patterns in the relationship between streaming popularity and media coverage:
 
-- **Weak correlation** between Spotify popularity and NYT coverage (r ≈ 0.3)
-- **Original albums** receive ~55% more media coverage than re-recordings on average
-- **Recency bias**: Newer albums (The Life of a Showgirl, Midnights) dominate coverage
-- **Cultural significance** matters more than streaming numbers for NYT coverage
-  - Example: *folklore* (75 popularity, 6 mentions) vs *Lover* (88 popularity, 0 mentions)
+**Dataset Summary:**
+- 12 albums analyzed
+- 7 albums with NYT coverage
+- 41 total article-album matches
 
-## Documentation
+### 1. Weak Correlation Between Popularity and Coverage
 
-Full documentation is available at [Read the Docs](https://ts-media-bridge.readthedocs.io) (link to be added).
+Spotify popularity scores show **weak correlation** with NYT article mentions. High streaming numbers don't guarantee media attention.
 
-See the [vignette notebook](notebooks/vignette.ipynb) for detailed usage examples and analysis.
+**Examples:**
+- *Lover* (88 popularity) → 0 NYT mentions
+- *Midnights* (82 popularity) → 0 NYT mentions
+- *folklore* (75 popularity) → 6 NYT mentions
 
-## Rate Limiting
+**Insight:** Cultural significance matters more than commercial metrics.
 
-Both APIs have rate limits:
+### 2. Recency Bias Dominates
 
-- **Spotify**: Uses client credentials flow, automatic token refresh
-- **NYT**: 10 calls per minute, 4000 per day
-  - The package automatically waits 6.5 seconds between requests
+Recent albums receive disproportionate coverage regardless of popularity scores:
 
-## Troubleshooting
-### Common Issues
-**"Missing Spotify credentials" error**
-- Make sure your `.env` file is in the project root directory
-- Check that `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are set correctly
-- Verify credentials at [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-**NYT Rate Limit (429 error)**
-- The package includes automatic rate limiting, but if you interrupt execution you may need to wait
-- Wait 60 seconds before retrying if you hit the rate limit
-**Import errors after installation**
-- Try restarting your Python kernel/interpreter
-- Make sure you're in the correct virtual environment
+- *The Life of a Showgirl* (2025): **12 mentions** (100 popularity)
+- *reputation* (2017): **10 mentions** (87 popularity)
+- *folklore* (2020): **6 mentions** (75 popularity)
+
+Meanwhile, classic albums with high popularity get minimal coverage:
+- *Taylor Swift* (2006): 0 mentions (67 popularity)
+- *1989* (2023, Taylor's Version): 1 mention (82 popularity)
+
+### 3. Original Albums vs Re-recordings
+
+Taylor's Versions receive less coverage than original releases:
+
+**Re-recordings:**
+- *Fearless (Taylor's Version)*: 4 mentions
+- *Red (Taylor's Version)*: 5 mentions
+- *Speak Now (Taylor's Version)*: 0 mentions
+- *1989 (Taylor's Version)*: 1 mention
+
+**Originals:**
+- *reputation*: 10 mentions
+- *folklore*: 6 mentions
+- *evermore*: 3 mentions
+
+**Average:** Original albums receive approximately **2x more coverage** than re-recordings.
+
+### 4. Cultural Moments Matter More Than Streaming
+
+The NYT covers artistic evolution and cultural impact over commercial performance:
+
+- *folklore* (pandemic-era surprise album): 6 mentions despite lower popularity (75)
+- *reputation* (post-controversy comeback): 10 mentions
+- *The Life of a Showgirl* (new release): 12 mentions
+
+High-popularity albums without cultural narratives get overlooked:
+- *Lover*: 88 popularity, 0 mentions
+- *THE TORTURED POETS DEPARTMENT*: 82 popularity, 0 mentions
+
+## API Clients
+
+### SpotifyClient
+
+Handles Spotify Web API authentication and data retrieval:
+```python
+from ts_media_bridge import SpotifyClient
+
+sp = SpotifyClient()
+
+# Get artist information
+artist = sp.get_artist("06HL4z0CvFAxyc27GXpf02")
+print(f"{artist['name']}: {artist['followers']['total']:,} followers")
+
+# Get albums as DataFrame
+df_albums = sp.get_artist_albums_df("06HL4z0CvFAxyc27GXpf02")
+print(df_albums[['name', 'release_date', 'popularity']].head())
+
+# Get all tracks
+df_tracks = sp.get_artist_tracks_df("06HL4z0CvFAxyc27GXpf02")
+```
+
+**Key Methods:**
+- `get_artist()` - Fetch artist metadata
+- `get_artist_albums_df()` - Get albums with smart filtering (removes duplicates, adds flags)
+- `get_artist_tracks_df()` - Get all tracks across all albums
+- `get_album_tracks()` - Get tracks from a specific album
+
+### NYTClient
+
+Interfaces with The New York Times Article Search API:
+```python
+from ts_media_bridge import NYTClient
+
+nyt = NYTClient()
+
+# Search for articles
+articles = nyt.search_articles("Taylor Swift", pages=3)
+print(f"Found {len(articles)} articles")
+
+# Search with date filters
+recent = nyt.search_taylor_swift(pages=5, begin_date="20230101")
+
+# Convert to DataFrame
+df_articles = nyt.docs_to_df(articles)
+print(df_articles[['headline', 'pub_date', 'section_name']].head())
+```
+
+**Key Methods:**
+- `search_articles()` - General article search
+- `search_taylor_swift()` - Convenience wrapper for Taylor Swift articles
+- `docs_to_df()` - Convert articles to pandas DataFrame
+
+## Helper Functions
+
+### Matching
+```python
+from ts_media_bridge import match_articles_to_albums
+
+# Match articles to albums
+df_matched = match_articles_to_albums(df_albums, df_articles)
+```
+
+### Analysis Tools
+```python
+from ts_media_bridge import (
+    get_tracks_by_year,
+    longest_songs,
+    popularity_over_time,
+    compare_rerecordings
+)
+
+# Get tracks from a specific year
+tracks_2020 = get_tracks_by_year(df_tracks, 2020)
+
+# Find longest songs
+top_10_longest = longest_songs(df_tracks, n=10)
+
+# Analyze popularity trends
+yearly_trends = popularity_over_time(df_tracks)
+
+# Compare originals vs re-recordings
+comparison = compare_rerecordings(df_albums)
+```
+
+## Examples
+
+### Example 1: Album Coverage Analysis
+```python
+from ts_media_bridge import SpotifyClient, NYTClient, match_articles_to_albums
+
+# Initialize
+sp = SpotifyClient()
+nyt = NYTClient()
+
+# Get data
+df_albums = sp.get_artist_albums_df("06HL4z0CvFAxyc27GXpf02")
+articles = nyt.search_taylor_swift(pages=10)
+df_articles = nyt.docs_to_df(articles)
+
+# Match and analyze
+df_matched = match_articles_to_albums(df_albums, df_articles)
+
+# Count mentions per album
+mentions = (
+    df_matched.groupby('album_base_title')['web_url']
+    .nunique()
+    .sort_values(ascending=False)
+)
+print(mentions)
+```
+
+### Example 2: Temporal Analysis
+```python
+from ts_media_bridge import SpotifyClient, popularity_over_time
+
+sp = SpotifyClient()
+df_tracks = sp.get_artist_tracks_df("06HL4z0CvFAxyc27GXpf02")
+
+# Analyze how popularity changes over release years
+yearly_avg = popularity_over_time(df_tracks)
+print(yearly_avg)
+```
+
+### Example 3: Re-recording Comparison
+```python
+from ts_media_bridge import SpotifyClient, compare_rerecordings
+
+sp = SpotifyClient()
+df_albums = sp.get_artist_albums_df("06HL4z0CvFAxyc27GXpf02")
+
+# Compare originals vs Taylor's Versions
+comparison = compare_rerecordings(df_albums)
+print(comparison)
+```
+
+## Development
+
+### Running Tests
+```bash
+# Run smoke tests
+python tests/test_basic.py
+
+# Run with pytest
+pytest tests/ -v
+```
+
+### Building Documentation
+```bash
+cd docs
+make html
+```
+
+Documentation will be generated in `docs/build/html/`.
+
+### Contributing
+
+## Requirements
+
+- Python >= 3.12
+- requests >= 2.31.0
+- pandas >= 2.0.0
+- python-dotenv >= 1.0.0
+
+For documentation:
+- sphinx >= 8.0.0
+- sphinx-rtd-theme >= 3.0.0
+- sphinx-autodoc-typehints >= 2.0.0
 
 ## License
 
-MIT License - see LICENSE file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Author
 
-Sofia Giorgianni (sg3925@columbia.edu)
+**Sofia Giorgianni**  
+Columbia University, Fall 2024  
+[sg3925@columbia.edu](mailto:sg3925@columbia.edu)
 
+## Links
 
+- **Documentation**: https://ts-media-bridge.readthedocs.io
+- **GitHub**: https://github.com/smgiorgianni/ts-media-bridge
+- **PyPI**: (Coming soon)
 
+---
 
+*Note: This package requires valid API credentials from both Spotify and The New York Times. Please ensure you comply with their respective Terms of Service when using this package.*
