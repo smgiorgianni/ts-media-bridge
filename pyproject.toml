@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ts-media-bridge"
-version = "0.1.1"
+version = "0.1.2"
 description = "Bridge Spotify and NYT APIs to analyze streaming popularity vs media coverage."
 authors = ["Sofia Giorgianni <sg3925@columbia.edu>"]
 readme = "README.md"
@@ -12,7 +12,6 @@ python = "^3.12"
 requests = "^2.31.0"
 pandas = "^2.0.0"
 python-dotenv = "^1.0.0"
-jupyterlab = ">=4.5.0,<5.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
