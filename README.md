@@ -108,42 +108,7 @@ Full documentation is available at: **https://ts-media-bridge.readthedocs.io**
 - [API Reference](https://ts-media-bridge.readthedocs.io/en/latest/api.html)
 - [Usage Examples](https://ts-media-bridge.readthedocs.io/en/latest/examples.html)
 
-## Project Structure
-
-ts-media-bridge/
-├── ts_media_bridge/           # Main package
-│   ├── __init__.py
-│   ├── spotify_client.py      # Spotify API client
-│   ├── nyt_client.py           # NYT API client
-│   ├── media_bridge.py         # Article-album matching logic
-│   └── spotify_helpers.py      # Analysis helper functions
-├── notebooks/                  # Jupyter notebooks
-│   ├── api_development.ipynb   # API development and testing
-│   ├── vignette.ipynb          # Usage examples and analysis
-│   ├── *.csv                   # Generated datasets
-│   └── *.png                   # Visualizations
-├── tests/                      # Test suite
-│   ├── test_basic.py           # Smoke tests
-│   └── test_clients.py         # Unit tests
-├── docs/                       # Sphinx documentation
-│   ├── source/                 # Documentation source files
-│   │   ├── conf.py
-│   │   ├── index.rst
-│   │   ├── installation.rst
-│   │   ├── quickstart.rst
-│   │   ├── api.rst
-│   │   └── examples.rst
-│   ├── build/html/             # Generated HTML documentation
-│   └── Makefile
-├── .gitignore                  # Git ignore rules
-├── .readthedocs.yaml           # ReadTheDocs configuration
-├── LICENSE                     # MIT License
-├── README.md                   # This file
-├── pyproject.toml              # Package configuration
-├── requirements.txt            # Python dependencies
-└── poetry.lock                 # Locked dependencies
-
-## Key Findings
+# Key Findings
 
 Analysis of Taylor Swift's discography revealed interesting patterns in the relationship between streaming popularity and media coverage:
 
@@ -380,14 +345,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Author
 
 **Sofia Giorgianni**  
-Columbia University, Fall 2024  
+Columbia University, Fall 2025  
 [sg3925@columbia.edu](mailto:sg3925@columbia.edu)
 
 ## Links
 
 - **Documentation**: https://ts-media-bridge.readthedocs.io
 - **GitHub**: https://github.com/smgiorgianni/ts-media-bridge
-- **PyPI**: (Coming soon)
+- **PyPI**: https://test.pypi.org/project/ts-media-bridge/
 
 ---
 
